@@ -40,6 +40,30 @@ dump_boot;
 
 # end ramdisk changes
 
+# Mount system to check if the user is on stock
+umount /system;
+umount /system 2>/dev/null;
+mkdir /system_root 2>/dev/null;
+mount -o ro -t auto /dev/block/bootdevice/by-name/system$slot /system_root;
+mount -o bind /system_root/system /system;
+
+# Patch dtbo on custom ROMs
+if [ "$(grep "^ro.build.user=" /system/build.prop | cut -d= -f2)" != "android-build" ]; then
+  if [ ! -z /tmp/anykernel/dtbo ]; then
+    ui_print " "; ui_print "You are on a custom ROM, patching dtbo to remove verity...";
+    /tmp/anykernel/tools/magiskboot --dtb-patch /tmp/anykernel/dtbo;
+  fi;
+else
+  ui_print " "; ui_print "You are on stock, not patching dtbo to remove verity!";
+fi;
+
+# Unmount system
+umount /system;
+umount /system_root;
+rmdir /system_root;
+mount -o ro -t auto /system;
+
+# Write the images
 write_boot;
 
 ## end install
