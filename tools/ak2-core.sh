@@ -384,7 +384,7 @@ insert_line() {
       after) offset=1;;
     esac;
     line=$((`grep -n "$4" $1 | head -n1 | cut -d: -f1` + offset));
-    if [ "$(wc -l $1 | cut -d\  -f1)" -le "$line" ]; then
+    if [ "$(wc -l $1 | cut -d\  -f1)" -lt "$line" ]; then
       echo "$5" >> $1;
     else
       sed -i "${line}s;^;${5}\n;" $1;
@@ -460,7 +460,7 @@ patch_fstab() {
   fi;
 }
 
-# patch_cmdline <cmdline match string> <replacement string>
+# patch_cmdline <cmdline entry name> <replacement string>
 patch_cmdline() {
   cmdfile=`ls $split_img/*-cmdline`;
   if [ -z "$(grep "$1" $cmdfile)" ]; then
