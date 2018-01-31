@@ -56,7 +56,7 @@ mount -o bind /system_root/system /system;
 if [ "$(grep "^ro.build.user=" /system/build.prop | cut -d= -f2)" != "android-build" ]; then
   if [ ! -z /tmp/anykernel/dtbo ]; then
     ui_print " "; ui_print "You are on a custom ROM, patching dtbo to remove verity...";
-    /tmp/anykernel/tools/magiskboot --dtb-patch /tmp/anykernel/dtbo;
+    $bin/magiskboot --dtb-patch /tmp/anykernel/dtbo;
   fi;
 else
   ui_print " "; ui_print "You are on stock, not patching dtbo to remove verity!";
