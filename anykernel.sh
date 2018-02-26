@@ -33,11 +33,6 @@ chmod -R 750 $ramdisk/*;
 chown -R root:root $ramdisk/*;
 
 
-if [ -f /tmp/anykernel/version ]; then
-  ui_print " ";
-  ui_print "Kernel version: $(cat /tmp/anykernel/version)";
-fi;
-
 ## AnyKernel install
 dump_boot;
 
