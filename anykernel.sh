@@ -34,22 +34,21 @@ chown -R root:root $ramdisk/*;
 
 
 ## AnyKernel install
-dump_boot;
+split_boot;
+flash_boot;
 
-# begin ramdisk changes
 
-# end ramdisk changes
+# system_getprop <prop>
+system_getprop() { grep "^$1=" /system/build.prop | cut -d= -f2; }
 
-# Mount system to check if the user is on stock
+# Mount system to get some information about the user's setup
 umount /system;
 umount /system 2>/dev/null;
 mkdir /system_root 2>/dev/null;
 mount -o ro -t auto /dev/block/bootdevice/by-name/system$slot /system_root;
 mount -o bind /system_root/system /system;
 
-# system_getprop <prop>
-system_getprop() { grep "^$1=" /system/build.prop | cut -d= -f2; }
-
+# Warn user of their support status
 android_version="$(system_getprop "ro.build.version.release")";
 security_patch="$(system_getprop "ro.build.version.security_patch")";
 version_info="$android_version:$security_patch";
@@ -57,8 +56,7 @@ case "$version_info" in
     "8.1.0:2018-02-05") support_status="a supported";;
     *) support_status="an unsupported";;
 esac;
-ui_print " ";
-ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration..."
+ui_print " "; ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration..."
 
 # Patch dtbo on custom ROMs
 if [ "$(system_getprop "ro.build.user")" != "android-build" ]; then
@@ -75,9 +73,6 @@ umount /system;
 umount /system_root;
 rmdir /system_root;
 mount -o ro -t auto /system;
-
-# Write the images
-write_boot;
 
 ## end install
 
