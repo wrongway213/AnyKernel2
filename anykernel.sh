@@ -50,6 +50,16 @@ mount -o bind /system_root/system /system;
 # system_getprop <prop>
 system_getprop() { grep "^$1=" /system/build.prop | cut -d= -f2; }
 
+android_version="$(system_getprop "ro.build.version.release")";
+security_patch="$(system_getprop "ro.build.version.security_patch")";
+version_info="$android_version:$security_patch";
+case "$version_info" in
+    "8.1.0:2018-02-05") support_status="a supported";;
+    *) support_status="an unsupported";;
+esac;
+ui_print " ";
+ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration..."
+
 # Patch dtbo on custom ROMs
 if [ "$(system_getprop "ro.build.user")" != "android-build" ]; then
   if [ ! -z /tmp/anykernel/dtbo ]; then
