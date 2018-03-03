@@ -47,8 +47,11 @@ mkdir /system_root 2>/dev/null;
 mount -o ro -t auto /dev/block/bootdevice/by-name/system$slot /system_root;
 mount -o bind /system_root/system /system;
 
+# system_getprop <prop>
+system_getprop() { grep "^$1=" /system/build.prop | cut -d= -f2; }
+
 # Patch dtbo on custom ROMs
-if [ "$(grep "^ro.build.user=" /system/build.prop | cut -d= -f2)" != "android-build" ]; then
+if [ "$(system_getprop "ro.build.user")" != "android-build" ]; then
   if [ ! -z /tmp/anykernel/dtbo ]; then
     ui_print " "; ui_print "You are on a custom ROM, patching dtbo to remove verity...";
     $bin/magiskboot --dtb-patch /tmp/anykernel/dtbo;
