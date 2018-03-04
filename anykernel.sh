@@ -35,7 +35,6 @@ chown -R root:root $ramdisk/*;
 
 ## AnyKernel install
 split_boot;
-flash_boot;
 
 
 # system_getprop <prop>
@@ -73,6 +72,11 @@ umount /system;
 umount /system_root;
 rmdir /system_root;
 mount -o ro -t auto /system;
+
+
+# Install the boot image
+flash_boot;
+
 
 ## end install
 
