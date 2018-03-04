@@ -33,12 +33,13 @@ chmod -R 750 $ramdisk/*;
 chown -R root:root $ramdisk/*;
 
 
+# system_getprop <prop>
+system_getprop() { grep "^$1=" /system/build.prop | cut -d= -f2; }
+
+
 ## AnyKernel install
 split_boot;
 
-
-# system_getprop <prop>
-system_getprop() { grep "^$1=" /system/build.prop | cut -d= -f2; }
 
 # Mount system to get some information about the user's setup
 umount /system;
@@ -46,6 +47,7 @@ umount /system 2>/dev/null;
 mkdir /system_root 2>/dev/null;
 mount -o ro -t auto /dev/block/bootdevice/by-name/system$slot /system_root;
 mount -o bind /system_root/system /system;
+
 
 # Warn user of their support status
 android_version="$(system_getprop "ro.build.version.release")";
@@ -57,6 +59,7 @@ case "$version_info" in
 esac;
 ui_print " "; ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration..."
 
+
 # Patch dtbo on custom ROMs
 if [ "$(system_getprop "ro.build.user")" != "android-build" ]; then
   if [ ! -z /tmp/anykernel/dtbo ]; then
@@ -66,6 +69,7 @@ if [ "$(system_getprop "ro.build.user")" != "android-build" ]; then
 else
   ui_print " "; ui_print "You are on stock, not patching dtbo to remove verity!";
 fi;
+
 
 # Unmount system
 umount /system;
