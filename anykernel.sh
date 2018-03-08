@@ -33,10 +33,6 @@ chmod -R 750 $ramdisk/*;
 chown -R root:root $ramdisk/*;
 
 
-# system_getprop <prop>
-system_getprop() { grep "^$1=" /system/build.prop | cut -d= -f2; }
-
-
 ## AnyKernel install
 split_boot;
 
@@ -50,8 +46,8 @@ mount -o bind /system_root/system /system;
 
 
 # Warn user of their support status
-android_version="$(system_getprop "ro.build.version.release")";
-security_patch="$(system_getprop "ro.build.version.security_patch")";
+android_version="$(file_getprop /system/build.prop "ro.build.version.release")";
+security_patch="$(file_getprop /system/build.prop "ro.build.version.security_patch")";
 version_info="$android_version:$security_patch";
 case "$version_info" in
     "8.1.0:2018-03-05") support_status="a supported";;
@@ -61,7 +57,7 @@ ui_print " "; ui_print "You are on $android_version with the $security_patch sec
 
 
 # Patch dtbo on custom ROMs
-if [ "$(system_getprop "ro.build.user")" != "android-build" ]; then
+if [ "$(file_getprop /system/build.prop "ro.build.user")" != "android-build" ]; then
   if [ ! -z /tmp/anykernel/dtbo ]; then
     ui_print " "; ui_print "You are on a custom ROM, patching dtbo to remove verity...";
     $bin/magiskboot --dtb-patch /tmp/anykernel/dtbo;
