@@ -57,7 +57,12 @@ ui_print " "; ui_print "You are on $android_version with the $security_patch sec
 
 
 # Patch dtbo on custom ROMs
-if [ "$(file_getprop /system/build.prop "ro.build.user")" != "android-build" ]; then
+hostname="$(file_getprop /system/build.prop "ro.build.host")"
+case "$hostname" in
+    *corp.google.com) host=google;;
+    *) host=custom;;
+esac
+if [ "$(file_getprop /system/build.prop "ro.build.user")" != "android-build" -o "$host" == "custom" ]; then
   if [ ! -z /tmp/anykernel/dtbo ]; then
     ui_print " "; ui_print "You are on a custom ROM, patching dtbo to remove verity...";
     $bin/magiskboot --dtb-patch /tmp/anykernel/dtbo;
