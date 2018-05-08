@@ -4,21 +4,21 @@
 ## AnyKernel setup
 # begin properties
 properties() {
-kernel.string=DirtyV by bsmitty83 @ xda-developers
+kernel.string=Flash Kernel for the Pixel and Pixel XL by @nathanchance
 do.devicecheck=1
 do.modules=0
 do.cleanup=1
 do.cleanuponabort=0
-device.name1=maguro
-device.name2=toro
-device.name3=toroplus
+device.name1=marlin
+device.name2=sailfish
+device.name3=
 device.name4=
 device.name5=
 } # end properties
 
 # shell variables
-block=/dev/block/platform/omap/omap_hsmmc.0/by-name/boot;
-is_slot_device=0;
+block=/dev/block/bootdevice/by-name/boot;
+is_slot_device=1;
 ramdisk_compression=auto;
 
 
@@ -34,30 +34,62 @@ chown -R root:root $ramdisk/*;
 
 
 ## AnyKernel install
-dump_boot;
+split_boot;
 
-# begin ramdisk changes
 
-# init.rc
-backup_file init.rc;
-replace_string init.rc "cpuctl cpu,timer_slack" "mount cgroup none /dev/cpuctl cpu" "mount cgroup none /dev/cpuctl cpu,timer_slack";
-append_file init.rc "run-parts" init;
+# Mount system to get some information about the user's setup
+umount /system;
+umount /system 2>/dev/null;
+mkdir /system_root 2>/dev/null;
+mount -o ro -t auto /dev/block/bootdevice/by-name/system$slot /system_root;
+mount -o bind /system_root/system /system;
 
-# init.tuna.rc
-backup_file init.tuna.rc;
-insert_line init.tuna.rc "nodiratime barrier=0" after "mount_all /fstab.tuna" "\tmount ext4 /dev/block/platform/omap/omap_hsmmc.0/by-name/userdata /data remount nosuid nodev noatime nodiratime barrier=0";
-append_file init.tuna.rc "dvbootscript" init.tuna;
 
-# fstab.tuna
-backup_file fstab.tuna;
-patch_fstab fstab.tuna /system ext4 options "noatime,barrier=1" "noatime,nodiratime,barrier=0";
-patch_fstab fstab.tuna /cache ext4 options "barrier=1" "barrier=0,nomblk_io_submit";
-patch_fstab fstab.tuna /data ext4 options "data=ordered" "nomblk_io_submit,data=writeback";
-append_file fstab.tuna "usbdisk" fstab;
+# Warn user of their support status
+android_version="$(file_getprop /system/build.prop "ro.build.version.release")";
+security_patch="$(file_getprop /system/build.prop "ro.build.version.security_patch")";
+version_info="$android_version:$security_patch";
+case "$version_info" in
+    "8.1.0:2018-05-05"|"P:2018-05-05") support_status="a supported";;
+    *) support_status="an unsupported";;
+esac;
+ui_print " "; ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration..."
 
-# end ramdisk changes
 
-write_boot;
+# Patch dtbo on custom ROMs
+hostname="$(file_getprop /system/build.prop "ro.build.host")"
+case "$hostname" in
+    *corp.google.com) host=google;;
+    *) host=custom;;
+esac
+if [ "$(file_getprop /system/build.prop "ro.build.user")" != "android-build" -o "$host" == "custom" ]; then
+  ui_print " "; ui_print "You are on a custom ROM, patching dtb to remove verity...";
+  # Temporarily block out all custom recovery binaries/libs
+  mv /sbin /sbin_tmp
+  # Unset library paths
+  OLD_LD_LIB=$LD_LIBRARY_PATH
+  OLD_LD_PRE=$LD_PRELOAD
+  unset LD_LIBRARY_PATH
+  unset LD_PRELOAD
+  $bin/magiskboot --dtb-patch /tmp/anykernel/Image.lz4-dtb;
+  mv /sbin_tmp /sbin 2>/dev/null
+  [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB
+  [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE
+else
+  ui_print " "; ui_print "You are on stock, not patching dtb to remove verity!";
+fi;
+
+
+# Unmount system
+umount /system;
+umount /system_root;
+rmdir /system_root;
+mount -o ro -t auto /system;
+
+
+# Install the boot image
+flash_boot;
+
 
 ## end install
 
