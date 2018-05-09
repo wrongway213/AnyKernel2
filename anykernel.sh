@@ -50,7 +50,9 @@ android_version="$(file_getprop /system/build.prop "ro.build.version.release")";
 security_patch="$(file_getprop /system/build.prop "ro.build.version.security_patch")";
 version_info="$android_version:$security_patch";
 case "$version_info" in
+    "8.1.0:2018-04-0"*) support_status="a unsupported"; os="oreo";;
     "8.1.0:2018-05-05") support_status="a supported"; os="oreo";;
+    "P:2018-03-05") support_status="a unsupported"; os="p";;
     "P:2018-05-05") support_status="a supported"; os="p";;
     *) support_status="an unsupported";;
 esac;
