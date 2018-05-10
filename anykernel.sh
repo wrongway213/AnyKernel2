@@ -77,7 +77,17 @@ esac
 if [ "$(file_getprop /system/build.prop "ro.build.user")" != "android-build" -o "$host" == "custom" ]; then
   if [ ! -z /tmp/anykernel/dtbo ]; then
     ui_print " "; ui_print "You are on a custom ROM, patching dtbo to remove verity...";
+    # Temporarily block out all custom recovery binaries/libs
+    mv /sbin /sbin_tmp
+    # Unset library paths
+    OLD_LD_LIB=$LD_LIBRARY_PATH
+    OLD_LD_PRE=$LD_PRELOAD
+    unset LD_LIBRARY_PATH
+    unset LD_PRELOAD
     $bin/magiskboot --dtb-patch /tmp/anykernel/dtbo;
+    mv /sbin_tmp /sbin 2>/dev/null
+    [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB
+    [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE
   fi;
 else
   ui_print " "; ui_print "You are on stock, not patching dtbo to remove verity!";
