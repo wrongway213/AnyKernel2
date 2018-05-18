@@ -76,7 +76,7 @@ esac
 hostname="$(file_getprop /system/build.prop "ro.build.host")"
 echo "Found host: $hostname"
 case "$hostname" in
-    *corp.google.com) host=google;;
+    *corp.google.com|abfarm*) host=google;;
     *) host=custom;;
 esac
 if [ "$user" == "custom" -o "$host" == "custom" ]; then
