@@ -67,12 +67,19 @@ fi;
 
 
 # Patch dtbo on custom ROMs
+username="$(file_getprop /system/build.prop "ro.build.user")"
+echo "Found user: $username"
+case "$username" in
+    "android-build") user=google;;
+    *) user=custom;;
+esac
 hostname="$(file_getprop /system/build.prop "ro.build.host")"
+echo "Found host: $hostname"
 case "$hostname" in
     *corp.google.com) host=google;;
     *) host=custom;;
 esac
-if [ "$(file_getprop /system/build.prop "ro.build.user")" != "android-build" -o "$host" == "custom" ]; then
+if [ "$user" == "custom" -o "$host" == "custom" ]; then
   if [ ! -z /tmp/anykernel/dtbo ]; then
     ui_print " "; ui_print "You are on a custom ROM, patching dtbo to remove verity...";
     # Temporarily block out all custom recovery binaries/libs
