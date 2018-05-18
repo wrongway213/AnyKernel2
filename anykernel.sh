@@ -48,13 +48,12 @@ mount -o bind /system_root/system /system;
 # Warn user of their support status
 android_version="$(file_getprop /system/build.prop "ro.build.version.release")";
 security_patch="$(file_getprop /system/build.prop "ro.build.version.security_patch")";
-version_info="$android_version:$security_patch";
-case "$version_info" in
-    "8.1.0:2018-04-0"*) support_status="a unsupported"; os="oreo";;
+case "$android_version:$security_patch" in
     "8.1.0:2018-05-05") support_status="a supported"; os="oreo";;
-    "P:2018-03-05") support_status="a unsupported"; os="p";;
+    "8.1.0"*) support_status="a unsupported"; os="oreo";;
     "P:2018-05-05") support_status="a supported"; os="p";;
-    *) support_status="an unsupported";;
+    "P"*) support_status="a unsupported"; os="p";;
+    *) ui_print " "; ui_print "Completely unsupported OS configuration out!"; exit 1;
 esac;
 ui_print " "; ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration..."
 
@@ -63,8 +62,7 @@ ui_print " "; ui_print "You are on $android_version with the $security_patch sec
 if [ -f /tmp/anykernel/kernels/$os/Image.*-dtb ]; then
   mv /tmp/anykernel/kernels/$os/Image.*-dtb /tmp/anykernel;
 else
-  ui_print " ";
-  ui_print "There is no kernel for your OS in this zip! Aborting..."; exit 1;
+  ui_print " "; ui_print "There is no kernel for your OS in this zip! Aborting..."; exit 1;
 fi;
 
 
