@@ -58,14 +58,6 @@ esac;
 ui_print " "; ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration..."
 
 
-# Select the correct image to flash
-if [ -f /tmp/anykernel/kernels/$os/Image.*-dtb ]; then
-  mv /tmp/anykernel/kernels/$os/Image.*-dtb /tmp/anykernel;
-else
-  ui_print " "; ui_print "There is no kernel for your OS in this zip! Aborting..."; exit 1;
-fi;
-
-
 # Patch dtbo on custom ROMs
 username="$(file_getprop /system/build.prop "ro.build.user")"
 echo "Found user: $username"
