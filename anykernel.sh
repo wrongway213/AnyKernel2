@@ -49,7 +49,7 @@ mount -o bind /system_root/system /system;
 android_version="$(file_getprop /system/build.prop "ro.build.version.release")";
 security_patch="$(file_getprop /system/build.prop "ro.build.version.security_patch")";
 case "$android_version:$security_patch" in
-    "8.1.0:2018-05-05") support_status="a supported"; os="oreo";;
+    "8.1.0:2018-06-"*) support_status="a supported"; os="oreo";;
     "8.1.0"*) support_status="a unsupported"; os="oreo";;
     "P:2018-05-05") support_status="a supported"; os="p";;
     "P"*) support_status="a unsupported"; os="p";;
