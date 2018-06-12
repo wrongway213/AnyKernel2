@@ -50,7 +50,7 @@ android_version="$(file_getprop /system/build.prop "ro.build.version.release")";
 security_patch="$(file_getprop /system/build.prop "ro.build.version.security_patch")";
 version_info="$android_version:$security_patch";
 case "$version_info" in
-    "8.1.0:2018-05-05"|"P:2018-05-05") support_status="a supported";;
+    "8.1.0:2018-06-05"|"9:2018-06-05") support_status="a supported";;
     *) support_status="an unsupported";;
 esac;
 ui_print " "; ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration..."
@@ -59,7 +59,7 @@ ui_print " "; ui_print "You are on $android_version with the $security_patch sec
 # Patch dtbo on custom ROMs
 hostname="$(file_getprop /system/build.prop "ro.build.host")"
 case "$hostname" in
-    *corp.google.com) host=google;;
+    *corp.google.com|abfarm*) host=google;;
     *) host=custom;;
 esac
 if [ "$(file_getprop /system/build.prop "ro.build.user")" != "android-build" -o "$host" == "custom" ]; then
