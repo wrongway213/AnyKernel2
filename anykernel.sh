@@ -49,29 +49,29 @@ mount -o bind /system_root/system /system;
 android_version="$(file_getprop /system/build.prop "ro.build.version.release")";
 security_patch="$(file_getprop /system/build.prop "ro.build.version.security_patch")";
 case "$android_version:$security_patch" in
-    "8.1.0:2018-06-"*) support_status="a supported";;
-    "8.1.0"*) support_status="a unsupported";;
-    "9:2018-06-05") support_status="a supported";;
-    "P:2018-05-05") support_status="a supported";;
-    "P"*) support_status="a unsupported";;
-    *) ui_print " "; ui_print "Completely unsupported OS configuration!"; exit 1;
+  "8.1.0:2018-06-"*) support_status="a supported";;
+  "8.1.0"*) support_status="a unsupported";;
+  "9:2018-06-05") support_status="a supported";;
+  "P:2018-05-05") support_status="a supported";;
+  "P"*) support_status="a unsupported";;
+  *) ui_print " "; ui_print "Completely unsupported OS configuration!"; exit 1;;
 esac;
-ui_print " "; ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration..."
+ui_print " "; ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration...";
 
 
 # Patch dtbo on custom ROMs
-username="$(file_getprop /system/build.prop "ro.build.user")"
-echo "Found user: $username"
+username="$(file_getprop /system/build.prop "ro.build.user")";
+echo "Found user: $username";
 case "$username" in
-    "android-build") user=google;;
-    *) user=custom;;
-esac
-hostname="$(file_getprop /system/build.prop "ro.build.host")"
-echo "Found host: $hostname"
+  "android-build") user=google;;
+  *) user=custom;;
+esac;
+hostname="$(file_getprop /system/build.prop "ro.build.host")";
+echo "Found host: $hostname";
 case "$hostname" in
-    *corp.google.com|abfarm*) host=google;;
-    *) host=custom;;
-esac
+  *corp.google.com|abfarm*) host=google;;
+  *) host=custom;;
+esac;
 if [ "$user" == "custom" -o "$host" == "custom" ]; then
   if [ ! -z /tmp/anykernel/dtbo ]; then
     ui_print " "; ui_print "You are on a custom ROM, patching dtbo to remove verity...";
