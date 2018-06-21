@@ -43,6 +43,16 @@ chown -R root:root $ramdisk/*;
 dump_boot;
 
 
+# Find image setup
+decompressed_image=/tmp/anykernel/kernel/Image
+compressed_image=$decompressed_image.lz4
+if [ -f $compressed_image ]; then
+  concatenated_image=false;
+else
+  concatenated_image=true;
+fi;
+
+
 # Mount system to get some information about the user's setup (only needed in recovery)
 if $in_recovery; then
   umount /system;
@@ -50,6 +60,13 @@ if $in_recovery; then
   mkdir /system_root 2>/dev/null;
   mount -o ro -t auto /dev/block/bootdevice/by-name/system$slot /system_root;
   mount -o bind /system_root/system /system;
+  # Temporarily block out all custom recovery binaries/libs
+  mv /sbin /sbin_tmp;
+  # Unset library paths
+  OLD_LD_LIB=$LD_LIBRARY_PATH;
+  OLD_LD_PRE=$LD_PRELOAD;
+  unset LD_LIBRARY_PATH;
+  unset LD_PRELOAD;
 fi;
 
 
@@ -65,6 +82,21 @@ case "$android_version:$security_patch" in
   *) ui_print " "; ui_print "Completely unsupported OS configuration!"; exit 1;;
 esac;
 ui_print " "; ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration...";
+
+
+# If the user does not supply a concatenated image
+if ! $concatenated_image; then
+  # Hexpatch the kernel if Magisk is installed ('skip_initramfs' -> 'want_initramfs')
+  if [ -d $ramdisk/.backup ]; then
+    ui_print " "; ui_print "Magisk detected! Patching kernel so reflashing Magisk is not necessary...";
+    $bin/magiskboot --decompress $compressed_image $decompressed_image;
+    $bin/magiskboot --hexpatch $decompressed_image 736B69705F696E697472616D6673 77616E745F696E697472616D6673;
+    $bin/magiskboot --compress=lz4 $decompressed_image $compressed_image;
+  fi;
+
+  # Concatenate all of the dtbs to the kernel
+  cat $compressed_image /tmp/anykernel/dtbs/*.dtb > /tmp/anykernel/Image.lz4-dtb;
+fi;
 
 
 # Patch dtbo.img on custom ROMs
@@ -83,38 +115,18 @@ esac;
 if [ "$user" == "custom" -o "$host" == "custom" ]; then
   if [ ! -z /tmp/anykernel/dtbo.img ]; then
     ui_print " "; ui_print "You are on a custom ROM, patching dtbo to remove verity...";
-    if $in_recovery; then
-      # Temporarily block out all custom recovery binaries/libs
-      mv /sbin /sbin_tmp;
-      # Unset library paths
-      OLD_LD_LIB=$LD_LIBRARY_PATH;
-      OLD_LD_PRE=$LD_PRELOAD;
-      unset LD_LIBRARY_PATH;
-      unset LD_PRELOAD;
-    fi;
     $bin/magiskboot --dtb-patch /tmp/anykernel/dtbo.img;
-    if $in_recovery; then
-      mv /sbin_tmp /sbin 2>/dev/null;
-      [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB;
-      [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE;
-    fi;
   fi;
 else
   ui_print " "; ui_print "You are on stock, not patching dtbo to remove verity!";
 fi;
 
 
-# Add skip_override parameter to cmdline so user doesn't have to reflash Magisk
-if [ -d $ramdisk/.backup ]; then
-  ui_print " "; ui_print "Magisk detected! Patching cmdline so reflashing Magisk is not necessary...";
-  patch_cmdline "skip_override" "skip_override";
-else
-  patch_cmdline "skip_override" "";
-fi;
-
-
 # Unmount system
 if $in_recovery; then
+  mv /sbin_tmp /sbin 2>/dev/null;
+  [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB;
+  [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE;
   umount /system;
   umount /system_root;
   rmdir /system_root;
@@ -124,7 +136,3 @@ fi;
 
 # Install the boot image
 write_boot;
-
-
-## end install
-
