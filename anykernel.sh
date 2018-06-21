@@ -53,7 +53,6 @@ else
 fi;
 
 
-
 # Mount system to get some information about the user's setup
 if $in_recovery; then
   umount /system;
@@ -109,7 +108,6 @@ if [ "$(file_getprop /system/build.prop "ro.build.user")" != "android-build" -o 
 else
   ui_print " "; ui_print "You are on stock, not patching dtb to remove verity!";
 fi;
-
 
 
 # Unmount system
