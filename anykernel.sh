@@ -11,9 +11,6 @@ do.cleanup=1
 do.cleanuponabort=0
 device.name1=OnePlus6
 device.name2=enchilada
-device.name3=
-device.name4=
-device.name5=
 '; } # end properties
 
 # shell variables
