@@ -11,9 +11,6 @@ do.cleanup=1
 do.cleanuponabort=0
 device.name1=marlin
 device.name2=sailfish
-device.name3=
-device.name4=
-device.name5=
 '; } # end properties
 
 # shell variables
@@ -31,12 +28,6 @@ ps | grep zygote | grep -v grep >/dev/null && in_recovery=false || in_recovery=t
 ## AnyKernel methods (DO NOT CHANGE)
 # import patching functions/variables - see for reference
 . /tmp/anykernel/tools/ak2-core.sh;
-
-
-## AnyKernel file attributes
-# set permissions/ownership for included ramdisk files
-chmod -R 750 $ramdisk/*;
-chown -R root:root $ramdisk/*;
 
 
 # Unmount system and restore /sbin and library paths
