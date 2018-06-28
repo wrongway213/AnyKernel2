@@ -39,6 +39,28 @@ chmod -R 750 $ramdisk/*;
 chown -R root:root $ramdisk/*;
 
 
+# Unmount system and restore /sbin and library paths
+restore_recovery() {
+  if $in_recovery; then
+    mv /sbin_tmp /sbin 2>/dev/null;
+    [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB;
+    [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE;
+    umount /system;
+    umount /system_root;
+    rmdir /system_root;
+    mount -o ro -t auto /system;
+  fi;
+}
+
+
+# Do recovery restore, print message, and exit
+die() {
+  restore_recovery;
+  ui_print " "; ui_print "$*";
+  exit 1;
+}
+
+
 ## AnyKernel install
 dump_boot;
 
@@ -79,7 +101,7 @@ case "$android_version:$security_patch" in
   "9:2018-06-05") support_status="a supported";;
   "P:2018-05-05") support_status="a supported";;
   "P"*) support_status="a unsupported";;
-  *) ui_print " "; ui_print "Completely unsupported OS configuration!"; exit 1;;
+  *) die "Completely unsupported OS configuration!";;
 esac;
 ui_print " "; ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration...";
 
@@ -122,16 +144,8 @@ else
 fi;
 
 
-# Unmount system
-if $in_recovery; then
-  mv /sbin_tmp /sbin 2>/dev/null;
-  [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB;
-  [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE;
-  umount /system;
-  umount /system_root;
-  rmdir /system_root;
-  mount -o ro -t auto /system;
-fi;
+# Restore recovery if applicable
+restore_recovery;
 
 
 # Install the boot image
