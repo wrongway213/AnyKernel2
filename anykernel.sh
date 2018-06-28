@@ -28,6 +28,28 @@ ps | grep zygote | grep -v grep >/dev/null && in_recovery=false || in_recovery=t
 ! $in_recovery || id | grep -q 'uid=0' || in_recovery=false;
 
 
+# Unmount system and restore /sbin and library paths
+restore_recovery() {
+  if $in_recovery; then
+    mv /sbin_tmp /sbin 2>/dev/null;
+    [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB;
+    [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE;
+    umount /system;
+    umount /system_root;
+    rmdir /system_root;
+    mount -o ro -t auto /system;
+  fi;
+}
+
+
+# Do recovery restore, print message, and exit
+die() {
+  restore_recovery;
+  ui_print " "; ui_print "$*";
+  exit 1;
+}
+
+
 ## AnyKernel methods (DO NOT CHANGE)
 # import patching functions/variables - see for reference
 . /tmp/anykernel/tools/ak2-core.sh;
@@ -79,16 +101,8 @@ if ! $concatenated_image; then
 fi;
 
 
-# Unmount system and restore paths
-if $in_recovery; then
-  mv /sbin_tmp /sbin 2>/dev/null;
-  [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB;
-  [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE;
-  umount /system;
-  umount /system_root;
-  rmdir /system_root;
-  mount -o ro -t auto /system;
-fi;
+# Restore recovery if applicable
+restore_recovery;
 
 
 # Install the boot image
