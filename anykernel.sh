@@ -39,6 +39,28 @@ chmod -R 750 $ramdisk/*;
 chown -R root:root $ramdisk/*;
 
 
+# Unmount system and restore /sbin and library paths
+restore_recovery() {
+  if $in_recovery; then
+    mv /sbin_tmp /sbin 2>/dev/null;
+    [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB;
+    [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE;
+    umount /system;
+    umount /system_root;
+    rmdir /system_root;
+    mount -o ro -t auto /system;
+  fi;
+}
+
+
+# Do recovery restore, print message, and exit
+die() {
+  restore_recovery;
+  ui_print " "; ui_print "$*";
+  exit 1;
+}
+
+
 ## AnyKernel install
 dump_boot;
 
@@ -110,16 +132,8 @@ else
 fi;
 
 
-# Unmount system
-if $in_recovery; then
-  mv /sbin_tmp /sbin 2>/dev/null;
-  [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB;
-  [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE;
-  umount /system;
-  umount /system_root;
-  rmdir /system_root;
-  mount -o ro -t auto /system;
-fi;
+# Restore recovery if applicable
+restore_recovery;
 
 
 # Install the boot image
