@@ -87,11 +87,10 @@ fi;
 android_version="$(file_getprop /system/build.prop "ro.build.version.release")";
 security_patch="$(file_getprop /system/build.prop "ro.build.version.security_patch")";
 case "$android_version:$security_patch" in
-  "8.1.0:2018-06-"*) support_status="a supported";;
+  "8.1.0:2018-07-"*) support_status="a supported";;
   "8.1.0"*) support_status="a unsupported";;
-  "9:2018-06-05") support_status="a supported";;
-  "P:2018-05-05") support_status="a supported";;
-  "P"*) support_status="a unsupported";;
+  "9:2018-07-05") support_status="a supported";;
+  "P"*|"9"*) support_status="a unsupported";;
   *) die "Completely unsupported OS configuration!";;
 esac;
 ui_print " "; ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration...";
