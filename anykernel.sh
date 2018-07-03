@@ -19,34 +19,13 @@ is_slot_device=1;
 ramdisk_compression=auto;
 
 
-# Detect whether we're in recovery or booted up
-ps | grep zygote | grep -v grep >/dev/null && in_recovery=false || in_recovery=true;
-! $in_recovery || ps -A 2>/dev/null | grep zygote | grep -v grep >/dev/null && in_recovery=false;
-! $in_recovery || id | grep -q 'uid=0' || in_recovery=false;
-
-
 ## AnyKernel methods (DO NOT CHANGE)
 # import patching functions/variables - see for reference
 . /tmp/anykernel/tools/ak2-core.sh;
 
 
-# Unmount system and restore /sbin and library paths
-restore_recovery() {
-  if $in_recovery; then
-    mv /sbin_tmp /sbin 2>/dev/null;
-    [ -z $OLD_LD_LIB ] || export LD_LIBRARY_PATH=$OLD_LD_LIB;
-    [ -z $OLD_LD_PRE ] || export LD_PRELOAD=$OLD_LD_PRE;
-    umount /system;
-    umount /system_root;
-    rmdir /system_root;
-    mount -o ro -t auto /system;
-  fi;
-}
-
-
-# Do recovery restore, print message, and exit
+# Print message and exit
 die() {
-  restore_recovery;
   ui_print " "; ui_print "$*";
   exit 1;
 }
@@ -54,33 +33,6 @@ die() {
 
 ## AnyKernel install
 dump_boot;
-
-
-# Find image setup
-decompressed_image=/tmp/anykernel/kernel/Image
-compressed_image=$decompressed_image.lz4
-if [ -f $compressed_image ]; then
-  concatenated_image=false;
-else
-  concatenated_image=true;
-fi;
-
-
-# Mount system to get some information about the user's setup (only needed in recovery)
-if $in_recovery; then
-  umount /system;
-  umount /system 2>/dev/null;
-  mkdir /system_root 2>/dev/null;
-  mount -o ro -t auto /dev/block/bootdevice/by-name/system$slot /system_root;
-  mount -o bind /system_root/system /system;
-  # Temporarily block out all custom recovery binaries/libs
-  mv /sbin /sbin_tmp;
-  # Unset library paths
-  OLD_LD_LIB=$LD_LIBRARY_PATH;
-  OLD_LD_PRE=$LD_PRELOAD;
-  unset LD_LIBRARY_PATH;
-  unset LD_PRELOAD;
-fi;
 
 
 # Warn user of their support status
@@ -96,8 +48,10 @@ esac;
 ui_print " "; ui_print "You are on $android_version with the $security_patch security patch level! This is $support_status configuration...";
 
 
-# If the user does not supply a concatenated image
-if ! $concatenated_image; then
+# If the kernel image and dtbs are separated in the zip
+decompressed_image=/tmp/anykernel/kernel/Image
+compressed_image=$decompressed_image.lz4
+if [ -f $compressed_image ]; then
   # Hexpatch the kernel if Magisk is installed ('skip_initramfs' -> 'want_initramfs')
   if [ -d $ramdisk/.backup ]; then
     ui_print " "; ui_print "Magisk detected! Patching kernel so reflashing Magisk is not necessary...";
@@ -132,10 +86,6 @@ if [ "$user" == "custom" -o "$host" == "custom" ]; then
 else
   ui_print " "; ui_print "You are on stock, not patching dtbo to remove verity!";
 fi;
-
-
-# Restore recovery if applicable
-restore_recovery;
 
 
 # Install the boot image
