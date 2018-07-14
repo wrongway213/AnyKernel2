@@ -10,7 +10,6 @@ do.modules=0
 do.cleanup=1
 do.cleanuponabort=0
 device.name1=OnePlus6
-device.name2=enchilada
 '; } # end properties
 
 # shell variables
