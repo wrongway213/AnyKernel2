@@ -354,17 +354,19 @@ replace_string() {
 
 # replace_section <file> <begin search string> <end search string> <replacement string>
 replace_section() {
-  local begin endstr end;
+  local begin endstr last end;
   begin=`grep -n "$2" $1 | head -n1 | cut -d: -f1`;
   if [ "$begin" ]; then
-    test "$3" == " " -o -z "$3" && endstr='^$' || endstr="$3";
-    for end in `grep -n "$endstr" $1 | cut -d: -f1`; do
+    if [ "$3" == " " -o -z "$3" ]; then
+      endstr='^[[:space:]]*$';
+      last=$(wc -l $1 | cut -d\  -f1);
+    else
+      endstr="$3";
+    fi;
+    for end in $(grep -n "$endstr" $1 | cut -d: -f1) $last; do
       if [ "$end" ] && [ "$begin" -lt "$end" ]; then
-        if [ "$3" == " " -o -z "$3" ]; then
-          sed -i "/${2//\//\\/}/,/^\s*$/d" $1;
-        else
-          sed -i "/${2//\//\\/}/,/${3//\//\\/}/d" $1;
-        fi;
+        sed -i "${begin},${end}d" $1;
+        test "$end" == "$last" && echo >> $1;
         sed -i "${begin}s;^;${4}\n;" $1;
         break;
       fi;
@@ -374,17 +376,18 @@ replace_section() {
 
 # remove_section <file> <begin search string> <end search string>
 remove_section() {
-  local begin endstr end;
+  local begin endstr last end;
   begin=`grep -n "$2" $1 | head -n1 | cut -d: -f1`;
   if [ "$begin" ]; then
-    test "$3" == " " -o -z "$3" && endstr='^$' || endstr="$3";
-    for end in `grep -n "$endstr" $1 | cut -d: -f1`; do
+    if [ "$3" == " " -o -z "$3" ]; then
+      endstr='^[[:space:]]*$';
+      last=$(wc -l $1 | cut -d\  -f1);
+    else
+      endstr="$3";
+    fi;
+    for end in $(grep -n "$endstr" $1 | cut -d: -f1) $last; do
       if [ "$end" ] && [ "$begin" -lt "$end" ]; then
-        if [ "$3" == " " -o -z "$3" ]; then
-          sed -i "/${2//\//\\/}/,/^\s*$/d" $1;
-        else
-          sed -i "/${2//\//\\/}/,/${3//\//\\/}/d" $1;
-        fi;
+        sed -i "${begin},${end}d" $1;
         break;
       fi;
     done;
@@ -502,6 +505,21 @@ patch_prop() {
   fi;
 }
 
+# patch_ueventd <ueventd file> <device node> <permissions> <chown> <chgrp>
+patch_ueventd() {
+  local file dev perm user group newentry line;
+  file=$1; dev=$2; perm=$3; user=$4;
+  shift 4;
+  group="$@";
+  newentry=$(printf "%-23s   %-4s   %-8s   %s\n" "$dev" "$perm" "$user" "$group");
+  line=`grep -n "$dev" $file | head -n1 | cut -d: -f1`;
+  if [ "$line" ]; then
+    sed -i "${line}s;.*;${newentry};" $file;
+  else
+    echo -ne "\n$newentry\n" >> $file;
+  fi;
+}
+
 # allow multi-partition ramdisk modifying configurations (using reset_ak)
 if [ ! -d "$ramdisk" -a ! -d "$patch" ]; then
   if [ -d "$(basename $block)-files" ]; then
@@ -562,6 +580,11 @@ case $block in
       block=$(echo -n $target);
     else
       ui_print " "; ui_print "Unable to determine $block partition. Aborting..."; exit 1;
+    fi;
+  ;;
+  *)
+    if [ "$slot" ]; then
+      test -e "$block$slot" && block=$block$slot;
     fi;
   ;;
 esac;
