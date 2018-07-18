@@ -82,22 +82,6 @@ ui_print "AnyKernel2 by osm0sis @ xda-developers";
 ui_print " ";
 ui_print " ";
 
-unmount_all;
-mount -o ro -t auto /system;
-mount -o ro -t auto /vendor 2>/dev/null;
-mount /data 2>/dev/null;
-if [ -f /system/system/build.prop ]; then
-  umount /system;
-  umount /system 2>/dev/null;
-  mkdir /system_root 2>/dev/null;
-  mount -o ro -t auto /dev/block/bootdevice/by-name/system /system_root;
-  mount -o bind /system_root/system /system;
-fi;
-savedpath="$LD_LIBRARY_PATH";
-savedpre="$LD_PRELOAD";
-unset LD_LIBRARY_PATH;
-unset LD_PRELOAD;
-
 if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.devicecheck)" == 1 ]; then
   ui_print "Checking device...";
   device="$(getprop ro.product.device)";
@@ -116,6 +100,22 @@ if [ "$(file_getprop /tmp/anykernel/anykernel.sh do.devicecheck)" == 1 ]; then
     abort "Unsupported device. Aborting...";
   fi;
 fi;
+
+unmount_all;
+mount -o ro -t auto /system;
+mount -o ro -t auto /vendor 2>/dev/null;
+mount /data 2>/dev/null;
+if [ -f /system/system/build.prop ]; then
+  umount /system;
+  umount /system 2>/dev/null;
+  mkdir /system_root 2>/dev/null;
+  mount -o ro -t auto /dev/block/bootdevice/by-name/system /system_root;
+  mount -o bind /system_root/system /system;
+fi;
+savedpath="$LD_LIBRARY_PATH";
+savedpre="$LD_PRELOAD";
+unset LD_LIBRARY_PATH;
+unset LD_PRELOAD;
 
 ui_print "Installing...";
 for i in $($bb --list); do
