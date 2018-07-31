@@ -44,5 +44,9 @@ if [ -f $compressed_image ]; then
 fi;
 
 
+# Clean up other kernel overlay files
+rm -rf /tmp/anykernel/ramdisk/overlay;
+
+
 # Install the boot image
 write_boot;
