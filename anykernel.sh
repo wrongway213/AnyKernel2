@@ -44,8 +44,16 @@ if [ -f $compressed_image ]; then
 fi;
 
 
-# Clean up other kernel overlay files
-rm -rf /tmp/anykernel/ramdisk/overlay;
+# Clean up other kernels' ramdisk overlay files
+rm -rf $ramdisk/overlay;
+
+
+# Add our ramdisk files if Magisk is installed
+if [ -d $ramdisk/.backup ]; then
+  mv /tmp/anykernel/overlay $ramdisk;
+  cp /system_root/init.rc $ramdisk/overlay;
+  insert_line $ramdisk/overlay/init.rc "init.performance_profiles.rc" after 'import /init.usb.rc' "import /init.performance_profiles.rc";
+fi
 
 
 # Install the boot image
