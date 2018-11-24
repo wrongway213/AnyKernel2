@@ -4,7 +4,7 @@
 ## AnyKernel setup
 # begin properties
 properties() { '
-kernel.string=Flash Kernel for the Pixel 2 (XL) by @nathanchance
+kernel.string=Krieg Kernel for the Pixel 2 (XL) by wrongway213, APOPHIS9283, yoinx
 do.devicecheck=1
 do.modules=0
 do.cleanup=1
